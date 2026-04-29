@@ -1,0 +1,29 @@
+{
+  "kaikki_url": "https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl",
+  "fasttext_url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip",
+  "data_dir": "data/processed",
+  "model_dir": "models",
+  "records_path": "data/processed/etymology_records.jsonl",
+  "labels_path": "data/processed/labels.json",
+  "vector_subset_path": "models/fasttext_subset.vec",
+  "model_path": "models/etymology_tagger.json",
+  "metadata_path": "models/metadata.json",
+  "top_n_languages": 24,
+  "max_records": 8000,
+  "max_source_lines": 500000,
+  "test_fraction": 0.2,
+  "random_seed": 7,
+  "epochs": 120,
+  "learning_rate": 0.08,
+  "l2": 0.0005,
+  "threshold": 0.35,
+  "orthographic_features": {
+    "enabled": true,
+    "hash_dim": 1024,
+    "min_char_ngram": 3,
+    "max_char_ngram": 5,
+    "max_prefix": 5,
+    "max_suffix": 5
+  },
+  "storage_budget_gb": 5.0
+}
