@@ -8,16 +8,12 @@ from common import load_config, resolve
 from etymology_tagger.extract import (
     remap_to_top_languages,
     select_labels,
-    write_jsonl,
-    write_labels,
 )
-from etymology_tagger.vectors import write_tiny_vectors
 
+# A small set of representative etymological records for testing.
 SAMPLE_RECORDS = [
     {
         "word": "alcohol",
-        "display_word": "alcohol",
-        "parts_of_speech": ["noun"],
         "etymology_texts": ["Borrowed from French alcohol, derived ultimately from Arabic al-kuhl."],
         "pairs": [
             {"mechanism": "borrowed", "source_language": "French", "source_code": "fr"},
@@ -28,8 +24,6 @@ SAMPLE_RECORDS = [
     },
     {
         "word": "sushi",
-        "display_word": "sushi",
-        "parts_of_speech": ["noun"],
         "etymology_texts": ["Borrowed from Japanese sushi."],
         "pairs": [{"mechanism": "borrowed", "source_language": "Japanese", "source_code": "ja"}],
         "source_languages": ["Japanese"],
@@ -37,52 +31,52 @@ SAMPLE_RECORDS = [
     },
     {
         "word": "father",
-        "display_word": "father",
-        "parts_of_speech": ["noun"],
         "etymology_texts": ["Inherited from Middle English fader, from Old English faeder."],
         "pairs": [
-            {"mechanism": "inherited", "source_language": "Middle English", "source_code": "enm"},
-            {"mechanism": "inherited", "source_language": "Old English", "source_code": "ang"},
+            {"mechanism": "inherited", "source_language": "English", "source_code": "enm"},
+            {"mechanism": "inherited", "source_language": "English", "source_code": "ang"},
         ],
-        "source_languages": ["Middle English", "Old English"],
+        "source_languages": ["English"],
         "mechanisms": ["inherited"],
-    },
-    {
-        "word": "parabola",
-        "display_word": "parabola",
-        "parts_of_speech": ["noun"],
-        "etymology_texts": ["Derived from Ancient Greek parabole."],
-        "pairs": [{"mechanism": "derived", "source_language": "Ancient Greek", "source_code": "grc"}],
-        "source_languages": ["Ancient Greek"],
-        "mechanisms": ["derived"],
-    },
-    {
-        "word": "skyscraper",
-        "display_word": "skyscraper",
-        "parts_of_speech": ["noun"],
-        "etymology_texts": ["Calqued from French gratte-ciel."],
-        "pairs": [{"mechanism": "calqued", "source_language": "French", "source_code": "fr"}],
-        "source_languages": ["French"],
-        "mechanisms": ["calqued"],
     },
 ]
 
-
 def main() -> None:
+    """
+    Smoke test script to generate a minimal dataset and fake vectors.
+    
+    This is used to verify that the project plumbing (data loading, model 
+    instantiation, UI rendering) works correctly without requiring a 
+    4GB fastText download.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/prototype.json")
     args = parser.parse_args()
     config = load_config(args.config)
-    labels = select_labels(SAMPLE_RECORDS, config["top_n_languages"])
+    
+    # Process the small sample set
+    labels = select_labels(SAMPLE_RECORDS, config.get("top_n_languages", 0.01))
     records = [remap_to_top_languages(record, labels["source_languages"]) for record in SAMPLE_RECORDS]
-    write_jsonl(resolve(config["_project_root"], config["records_path"]), records)
-    write_labels(resolve(config["_project_root"], config["labels_path"]), labels)
-    write_tiny_vectors(
-        resolve(config["_project_root"], config["vector_subset_path"]),
-        [record["word"] for record in records],
-    )
-    print(f"Wrote tiny dataset and vectors for {len(records)} words.")
-
+    
+    # Write tiny data files
+    records_path = resolve(config["_project_root"], config["records_path"])
+    records_path.parent.mkdir(parents=True, exist_ok=True)
+    with records_path.open("w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r) + "\n")
+            
+    labels_path = resolve(config["_project_root"], config["labels_path"])
+    labels_path.write_text(json.dumps(labels, indent=2), encoding="utf-8")
+    
+    # Generate zero-vectors for the sample vocabulary
+    vec_path = resolve(config["_project_root"], config["vector_subset_path"])
+    with vec_path.open("w", encoding="utf-8") as f:
+        f.write(f"{len(records)} 300\n")
+        for r in records:
+            zeros = " ".join(["0.0"] * 300)
+            f.write(f"{r['word']} {zeros}\n")
+            
+    print(f"Success: Wrote tiny smoke-test assets to {records_path.parent}")
 
 if __name__ == "__main__":
     main()
