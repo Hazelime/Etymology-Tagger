@@ -3,7 +3,7 @@
 A neural etymology tagger produced as a course assignment for **Information Retrieval (5LN712)** at Uppsala University.
 
 **Live Demo**: [Hugging Face Spaces](https://huggingface.co/spaces/MarcusBennevall/EtymologyTagger)  
-**Dataset**: [Hugging Face Datasets](https://huggingface.co/datasets/MarcusBennevall/EtymologyTaggerDataset)
+**Dataset**: [Hugging Face Dataset](https://huggingface.co/datasets/MarcusBennevall/EtymologyTaggerDataset)
 
 This system provides automated etymological analysis for English words, utilizing Wiktionary-derived data from [Kaikki](https://kaikki.org/), pretrained fastText word vectors, and high-dimensional orthographic features.
 

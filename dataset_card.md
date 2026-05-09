@@ -6,6 +6,46 @@ task_categories:
 - token-classification
 - text-classification
 pretty_name: English Etymology Tagger Dataset
+dataset_info:
+  features:
+  - name: word
+    dtype: string
+  - name: display_word
+    dtype: string
+  - name: parts_of_speech
+    sequence: string
+  - name: etymology_texts
+    sequence: string
+  - name: pairs
+    list:
+    - name: mechanism
+      dtype: string
+    - name: source_language
+      dtype: string
+    - name: source_code
+      dtype: string
+    - name: source_term
+      dtype: string
+    - name: template
+      dtype: string
+    - name: detail
+      dtype: string
+  - name: source_languages
+    sequence: string
+  - name: mechanisms
+    sequence: string
+  splits:
+  - name: train
+    num_examples: 83204
+    gen_kwargs:
+      data_files:
+      - split: train
+        path: etymology_records.jsonl
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: etymology_records.jsonl
 ---
 
 # English Etymology Tagger Dataset
