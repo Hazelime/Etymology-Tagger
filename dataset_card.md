@@ -36,7 +36,7 @@ dataset_info:
     sequence: string
   splits:
   - name: train
-    num_examples: 83204
+    num_examples: 102111
 configs:
 - config_name: default
   data_files:
@@ -86,10 +86,13 @@ Based on the relevant datapoints ($N = 102,111$):
 *(Note: Percentages sum to >100% because words can have multiple labels. The "Other" category aggregates hundreds of minority languages.)*
 
 ### Data Processing & Refinement
-1.  **Linguistic Consolidation**: Common language variants are mapped to primary families (e.g., Old/Middle English variants merge into `English`).
-2.  **Label Thresholding**: Languages appearing in **>1%** of the dataset are preserved as distinct labels; others are remapped to **"Other"**.
-3.  **Exclusions**: Non-etymological labels (e.g., **"Translingual"**) are removed.
-4.  **Imbalance Mitigation**: High-frequency classes (Latin, English, French) are randomly undersampled by 50% in the training set.
+
+The data provided in this dataset (`etymology_records.jsonl`) contains the **102,111 parsed records**. The following normalization is applied during the creation of this dataset:
+
+1.  **Linguistic Consolidation**: Common historical and regional variants are mapped to their primary language families to reduce sparsity. The consolidated language families include: **Latin, English, French, German, Greek, Chinese, Dutch, Scots, and Proto-Germanic**.
+2.  **Exclusions**: Non-etymological labels (e.g., "Translingual") or structurally empty templates are removed.
+
+*(Note: The subsequent steps of **label thresholding** (grouping languages <1% frequency into "Other") and **class imbalance mitigation** (randomly undersampling majority classes) are performed dynamically by the `train.py` script prior to model training, resulting in the final 83,204 training/evaluation samples. The raw dataset provided here retains all minority languages and natural frequencies.)*
 
 ## Source
 The source is English Wiktionary data extracted by Wiktextract and published by [Kaikki](https://kaikki.org/).
