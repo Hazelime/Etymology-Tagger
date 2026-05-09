@@ -52,8 +52,7 @@ A refined dataset of English word etymologies derived from Wiktionary entries vi
 
 ### 1. Data Pipeline & Volume
 - **Original Source**: 1,465,676 English entries (total lines in the Kaikki English JSONL).
-- **Relevant Datapoints**: 102,111 entries (words containing etymological templates parsed by `wiktextract`).
-- **Filtered & Processed**: 83,204 datapoints used for training and evaluation.
+- **Extracted Datapoints**: 102,111 entries (words containing etymological templates parsed by `wiktextract`).
 
 ### 2. Source Language Distribution (Top 10)
 Based on the relevant datapoints ($N = 102,111$):
@@ -63,18 +62,22 @@ Based on the relevant datapoints ($N = 102,111$):
 | **Latin** (consolidated) | 23,728 | 23.24% |
 | **English** (consolidated) | 20,974 | 20.54% |
 | **French** (consolidated) | 16,694 | 16.35% |
-| **Greek** | 10,074 | 9.87% |
-| **German** | 7,300 | 7.15% |
-| **Chinese** | 5,017 | 4.91% |
+| **Greek** (consolidated) | 10,074 | 9.87% |
+| **German** (consolidated) | 7,300 | 7.15% |
+| **Chinese** (consolidated) | 5,017 | 4.91% |
 | **Italian** | 4,729 | 4.63% |
-| **Proto-Germanic** | 4,692 | 4.59% |
+| **Proto-Germanic** (consolidated) | 4,692 | 4.59% |
 | **Spanish** | 4,628 | 4.53% |
 | **Proto-Indo-European** | 4,097 | 4.01% |
 | ... | ... | ... |
 | **Other** (all languages < 1%) | 30,339 | 29.71% |
 
 ### 3. Entry Mechanism Distribution
-Based on the relevant datapoints ($N = 102,111$):
+Based on the extracted datapoints ($N = 102,111$). The dataset categorizes origins into four primary mechanisms:
+- **borrowed**: Words taken directly from another language (e.g., *sushi* from Japanese).
+- **derived**: Words formed by morphological derivation from another language's roots.
+- **inherited**: Words passed down continuously from an ancestor language (e.g., from Old English to Modern English).
+- **calqued**: Word-for-word translations of phrases or compound words from another language (e.g., *skyscraper* translated into French as *gratte-ciel*).
 
 | Mechanism | Frequency | Percentage |
 | :--- | :--- | :--- |
@@ -91,8 +94,6 @@ The data provided in this dataset (`etymology_records.jsonl`) contains the **102
 
 1.  **Linguistic Consolidation**: Common historical and regional variants are mapped to their primary language families to reduce sparsity. The consolidated language families include: **Latin, English, French, German, Greek, Chinese, Dutch, Scots, and Proto-Germanic**.
 2.  **Exclusions**: Non-etymological labels (e.g., "Translingual") or structurally empty templates are removed.
-
-*(Note: The subsequent steps of **label thresholding** (grouping languages <1% frequency into "Other") and **class imbalance mitigation** (randomly undersampling majority classes) are performed dynamically by the `train.py` script prior to model training, resulting in the final 83,204 training/evaluation samples. The raw dataset provided here retains all minority languages and natural frequencies.)*
 
 ## Source
 The source is English Wiktionary data extracted by Wiktextract and published by [Kaikki](https://kaikki.org/).
