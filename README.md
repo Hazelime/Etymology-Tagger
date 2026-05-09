@@ -1,5 +1,7 @@
 # English Etymology Tagger
 
+A vibe-coded etymology tagger produced as a course assignment for **Information Retrieval (5LN712)** at Uppsala University.
+
 Prototype word etymology tagger for English, using Wiktionary-derived JSONL from
 [Kaikki](https://kaikki.org/), fastText-style pretrained word vectors, and hashed
 orthographic features.
