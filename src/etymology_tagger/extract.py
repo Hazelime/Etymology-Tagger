@@ -10,6 +10,9 @@ from urllib.request import Request, urlopen
 
 from .languages import language_name
 
+# Mapping of Wiktionary etymology templates to simplified model mechanisms.
+# Wiktionary has dozens of specific templates (e.g., 'learned borrowing'), 
+# which we collapse into four broad categories for more stable training.
 MECHANISM_BY_TEMPLATE = {
     "bor": "borrowed",
     "bor+": "borrowed",
@@ -33,18 +36,27 @@ MECHANISM_BY_TEMPLATE = {
 }
 
 MECHANISMS = ["borrowed", "derived", "calqued", "inherited"]
+
+# Validation regex for English headwords (allows apostrophes and hyphens).
 WORD_RE = re.compile(r"^[A-Za-z][A-Za-z' -]{0,48}$")
 
-
 def collapse_language(name: str | None) -> str | None:
+    """
+    Consolidates fine-grained linguistic variants into primary family labels.
+    
+    Wiktionary distinguishes between 'Late Latin', 'Vulgar Latin', 'Medieval Latin', etc.
+    For a general-purpose tagger, these often provide redundant or sparse signals.
+    Collapsing them into 'Latin' ensures the model has enough samples per class.
+    """
     if not name:
         return None
     name = name.strip()
     
+    # Exclude broad or meta-categories that don't provide specific origin info.
     if name in ["Translingual", "Germanic languages"]:
         return None
         
-    # Mapping variants to parents
+    # Mapping table for consolidation
     collapsing = {
         "Latin": ["Late Latin", "Medieval Latin", "New Latin", "Vulgar Latin", "Classical Latin", "Ecclesiastical Latin", "la-ecc"],
         "English": ["Old English", "Middle English", "Northern Middle English", "ang", "enm", "enm-nor"],
@@ -63,16 +75,16 @@ def collapse_language(name: str | None) -> str | None:
             
     return name
 
-
 @dataclass
 class ExtractionStats:
+    """Container for tracking data volume through the extraction pipeline."""
     source_lines: int = 0
     english_entries: int = 0
     records: int = 0
     skipped_no_etymology: int = 0
 
-
 def load_jsonl_from_url(url: str, max_source_lines: int | None = None) -> Iterable[dict]:
+    """Streams JSONL records from a URL (e.g., Kaikki.org) to avoid loading massive files into memory."""
     request = Request(url, headers={"User-Agent": "EtymologyTagger/0.1"})
     with urlopen(request, timeout=60) as response:
         for idx, raw_line in enumerate(response, start=1):
@@ -82,15 +94,20 @@ def load_jsonl_from_url(url: str, max_source_lines: int | None = None) -> Iterab
                 continue
             yield json.loads(raw_line)
 
-
 def template_mechanism(name: str | None) -> str | None:
+    """Extracts the mechanism label from a Wiktextract template name."""
     if not name:
         return None
     normalized = name.strip().lower()
     return MECHANISM_BY_TEMPLATE.get(normalized)
 
-
 def source_from_template(template: dict) -> tuple[str | None, str | None]:
+    """
+    Parses a Wiktextract template to find the source language code and name.
+    
+    Handles cases where the first argument is English ('en') and the actual 
+    source is the second argument.
+    """
     args = template.get("args") or {}
     code = args.get("2")
     if code == "en":
@@ -98,143 +115,83 @@ def source_from_template(template: dict) -> tuple[str | None, str | None]:
     name = language_name(code)
     return code, collapse_language(name)
 
+def extract_etymology(record: dict) -> dict | None:
+    """
+    Core parser for a single Wiktionary record (from Kaikki/Wiktextract).
+    
+    Extracts the word, etymology text, and all structured language/mechanism 
+    pairs found in the templates.
+    """
+    word = record.get("word")
+    if not word or not WORD_RE.match(word):
+        return None
+        
+    lang_code = record.get("lang_code")
+    if lang_code != "en":
+        return None
 
-def pair_from_template(template: dict) -> dict | None:
-    mechanism = template_mechanism(template.get("name"))
-    if not mechanism:
-        return None
-    source_code, source_language = source_from_template(template)
-    if not source_language:
-        return None
-    args = template.get("args") or {}
-    return {
-        "mechanism": mechanism,
-        "source_language": source_language,
-        "source_code": source_code,
-        "source_term": args.get("3") if args.get("2") != "en" else args.get("4"),
-        "template": template.get("name"),
-        "detail": template.get("expansion") or "",
-    }
-
-
-def compact_record(entry: dict) -> dict | None:
-    if entry.get("lang_code") != "en":
-        return None
-    word = (entry.get("word") or "").strip()
-    if not WORD_RE.match(word):
-        return None
-    templates = entry.get("etymology_templates") or []
+    # We look for structured etymological templates parsed by Wiktextract
+    etym_templates = record.get("etymology_templates", [])
+    etym_texts = record.get("etymology_text", [])
+    if isinstance(etym_texts, str):
+        etym_texts = [etym_texts]
+    
     pairs = []
-    seen = set()
-    for template in templates:
-        pair = pair_from_template(template)
-        if not pair:
+    source_langs = set()
+    mechanisms = set()
+    
+    for template in etym_templates:
+        name = template.get("name")
+        mech = template_mechanism(name)
+        if not mech:
             continue
-        key = (pair["mechanism"], pair["source_language"], pair.get("source_term"))
-        if key in seen:
+            
+        code, lang = source_from_template(template)
+        if not lang:
             continue
-        seen.add(key)
-        pairs.append(pair)
-    if not pairs:
+            
+        pairs.append({"source_language": lang, "mechanism": mech, "code": code})
+        source_langs.add(lang)
+        mechanisms.add(mech)
+        
+    if not source_langs and not mechanisms:
         return None
+        
     return {
         "word": word.lower(),
-        "display_word": word,
-        "pos": entry.get("pos"),
-        "etymology_text": entry.get("etymology_text") or "",
+        "source_languages": list(source_langs),
+        "mechanisms": list(mechanisms),
         "pairs": pairs,
-        "source_languages": sorted({pair["source_language"] for pair in pairs}),
-        "mechanisms": sorted({pair["mechanism"] for pair in pairs}),
+        "etymology_texts": etym_texts,
     }
 
+def read_jsonl(path: Path) -> Iterable[dict]:
+    """Utility to read a local JSONL file."""
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                yield json.loads(line)
 
-def merge_records(records: Iterable[dict]) -> list[dict]:
-    by_word: dict[str, dict] = {}
+def select_labels(records: Iterable[dict], threshold_percent: float = 0.01) -> dict:
+    """
+    Analyzes the extracted dataset to select which labels to keep in the model.
+    
+    Any language with a frequency below the threshold_percent is remapped to 'Other'
+    during training to prevent the model from learning from insufficient data.
+    """
+    language_counts = Counter()
+    total_records = 0
     for record in records:
-        word = record["word"]
-        target = by_word.setdefault(
-            word,
-            {
-                "word": word,
-                "display_word": record.get("display_word", word),
-                "parts_of_speech": [],
-                "etymology_texts": [],
-                "pairs": [],
-                "source_languages": [],
-                "mechanisms": [],
-            },
-        )
-        if record.get("pos") and record["pos"] not in target["parts_of_speech"]:
-            target["parts_of_speech"].append(record["pos"])
-        if record.get("etymology_text") and record["etymology_text"] not in target["etymology_texts"]:
-            target["etymology_texts"].append(record["etymology_text"])
-        seen_pairs = {
-            (p["mechanism"], p["source_language"], p.get("source_term"))
-            for p in target["pairs"]
-        }
-        for pair in record["pairs"]:
-            key = (pair["mechanism"], pair["source_language"], pair.get("source_term"))
-            if key not in seen_pairs:
-                target["pairs"].append(pair)
-                seen_pairs.add(key)
-        target["source_languages"] = sorted({p["source_language"] for p in target["pairs"]})
-        target["mechanisms"] = sorted({p["mechanism"] for p in target["pairs"]})
-    return list(by_word.values())
-
-
-def select_labels(records: list[dict], top_n_languages: int) -> dict:
-    language_counts = Counter(
-        language for record in records for language in record["source_languages"]
-    )
-    n_records = len(records)
-    languages = [
-        language
-        for language, count in language_counts.most_common()
-        if language != "Other" and (count / n_records) > 0.01
-    ]
+        total_records += 1
+        language_counts.update(record["source_languages"])
+        
+    threshold = total_records * threshold_percent
+    languages = [lang for lang, count in language_counts.most_common() if count >= threshold]
     if "Other" not in languages:
         languages.append("Other")
+        
     return {
         "source_languages": languages,
         "mechanisms": MECHANISMS,
         "language_counts": dict(language_counts.most_common()),
     }
-
-
-def remap_to_top_languages(record: dict, selected_languages: list[str]) -> dict:
-    selected = set(selected_languages)
-    out = dict(record)
-    out["pairs"] = []
-    for pair in record.get("pairs", []):
-        mapped_pair = dict(pair)
-        if mapped_pair["source_language"] not in selected:
-            mapped_pair["source_language"] = "Other"
-            mapped_pair["source_code"] = "other"
-        out["pairs"].append(mapped_pair)
-    mapped_languages = [
-        language if language in selected else "Other"
-        for language in record["source_languages"]
-    ]
-    out["source_languages"] = sorted(set(mapped_languages))
-    out["mechanisms"] = sorted({pair["mechanism"] for pair in out["pairs"]})
-    return out
-
-
-def write_jsonl(path: Path, records: Iterable[dict]) -> int:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    count = 0
-    with path.open("w", encoding="utf-8") as handle:
-        for record in records:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
-            count += 1
-    return count
-
-
-def read_jsonl(path: Path) -> list[dict]:
-    with path.open("r", encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle if line.strip()]
-
-
-def write_labels(path: Path, labels: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(labels, indent=2, ensure_ascii=False), encoding="utf-8")

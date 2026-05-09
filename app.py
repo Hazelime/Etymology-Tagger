@@ -5,12 +5,15 @@ from pathlib import Path
 
 import gradio as gr
 
+# Ensure the 'src' directory is in the Python path so we can import our local package.
 SRC = Path(__file__).resolve().parent / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from etymology_tagger.predict import CLASSIFIER_OPTIONS, EtymologyPredictor
 
+# Custom CSS for the Gradio interface.
+# We use CSS Grid and Flexbox for a responsive, research-grade layout.
 CSS = """
 .legend {
   display: grid;
@@ -31,13 +34,10 @@ CSS = """
 }
 .legend-note {
   margin: -4px 0 12px;
-  color: #ffffff;
+  color: #6b7280;
   font-size: 12px;
 }
 .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
-.etag-radio {
-  display: none !important;
-}
 .tagged-output {
   line-height: 1.8;
   font-size: 16px;
@@ -86,46 +86,41 @@ CSS = """
 .eval-section {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #374151;
+  border-top: 1px solid #e5e7eb;
 }
 .eval-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  color: #ffffff;
-  background: #000000;
+  color: #374151;
+  background: #ffffff;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 .eval-table th {
-  background: #1f2937;
+  background: #f9fafb;
   font-weight: 600;
   text-align: left;
   padding: 10px 16px;
-  border-bottom: 1px solid #374151;
-  color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
 }
 .eval-table td {
   padding: 10px 16px;
-  border-bottom: 1px solid #111827;
-  color: #ffffff;
-}
-.eval-table tr:last-child td {
-  border-bottom: none;
+  border-bottom: 1px solid #f3f4f6;
 }
 .eval-title {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #ffffff;
 }
 """
 
+# Global predictor instance
 predictor = EtymologyPredictor()
 
-
 def legend_html() -> str:
+    """Generates the color legend for the UI based on model labels."""
     items = []
     for language, color in predictor.language_colors.items():
         frequency = predictor.language_frequencies.get(language, 0.0)
@@ -139,8 +134,8 @@ def legend_html() -> str:
         + "</div><div class='legend-note'>Labels can overlap. Percentages are based on word types in the training vocabulary.</div>"
     )
 
-
 def evaluation_html() -> str:
+    """Displays the model's test-set performance metrics in an HTML table."""
     eval_data = predictor.metadata.get("evaluation", {})
     if not eval_data:
         return ""
@@ -168,8 +163,8 @@ def evaluation_html() -> str:
         "</div>"
     )
 
-
 def tag_text(text: str) -> str:
+    """Gradio handler: Takes input text and returns interactive annotated HTML."""
     if not text.strip():
         return "<div class='etag-result'><div class='tagged-output'></div></div>"
     return (
@@ -179,7 +174,8 @@ def tag_text(text: str) -> str:
         + "</div>"
     )
 
-
+# JavaScript snippet to handle the interactive side-panel switching 
+# when a user clicks on a word.
 JS = """
 function showPanel(id) {
     document.querySelectorAll('.breakdown-panel').forEach(p => p.style.display = 'none');
@@ -190,20 +186,31 @@ function showPanel(id) {
 }
 """
 
-with gr.Blocks(css=CSS, js=JS) as demo:
+# Build the Gradio interface
+with gr.Blocks(css=CSS, js=JS, title="English Etymology Tagger") as demo:
     gr.Markdown("# English Etymology Tagger")
+    gr.Markdown(
+        "Automated etymological analysis using a **Multi-Task Neural Network**. "
+        "Type a sentence below and click on any word to see its predicted origin path."
+    )
+    
     text = gr.Textbox(
-        label="Text to tag",
-        lines=5,
+        label="Input Text",
+        lines=4,
+        placeholder="Enter English text here...",
         value="The berserk corgi said 'tycoon' from the jungle as the cosmonaut sought chaos with an avocado.",
     )
-    button = gr.Button("Tag text", variant="primary")
-    output = gr.HTML(label="Tagged text")
+    
+    button = gr.Button("Analyze Etymology", variant="primary")
+    output = gr.HTML(label="Interactive Visualization")
+    
+    # Display the performance metrics at the bottom
     gr.HTML(evaluation_html())
+    
+    # Event wiring
     button.click(tag_text, inputs=[text], outputs=output)
     text.submit(tag_text, inputs=[text], outputs=output)
     demo.load(tag_text, inputs=[text], outputs=output)
-
 
 if __name__ == "__main__":
     demo.launch()

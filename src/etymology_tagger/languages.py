@@ -1,8 +1,12 @@
-"""Language-code helpers for Wiktionary etymology templates.
+"""
+Language-code helpers for Wiktionary etymology templates.
 
-Wiktionary language codes are broad and occasionally edition-specific. This table
-covers common source languages in English etymologies and keeps unknown codes as
-readable code labels so extraction remains loss-tolerant.
+Wiktionary uses internal language codes (e.g., 'la' for Latin, 'ang' for Old English).
+This file provides a mapping from these codes to human-readable names to facilitate
+data extraction and collapsing.
+
+The mapping focuses on the most frequent source languages in the English corpus.
+Unknown codes are returned as-is to ensure the pipeline is robust to new additions.
 """
 
 LANGUAGE_CODE_TO_NAME = {
@@ -101,105 +105,14 @@ LANGUAGE_CODE_TO_NAME = {
     "vi": "Vietnamese",
     "yi": "Yiddish",
     "zh": "Chinese",
-    "cmn": "Mandarin Chinese",
-    "cmn-pinyin": "Mandarin Chinese (Pinyin)",
-    "cmn-wadegiles": "Mandarin Chinese (Wade-Giles)",
-    "yue": "Cantonese",
-    "nan-hbl": "Hokkien",
-    "fa-cls": "Classical Persian",
-    "sco": "Scots",
-    "mni": "Meitei",
-    "sh": "Serbo-Croatian",
-    "sk": "Slovak",
-    "gem": "Germanic languages",
-    "haw": "Hawaiian",
-    "goh": "Old High German",
-    "nrf": "Norman",
-    "inc-hnd": "Hindi-Urdu",
-    "egy": "Egyptian",
-    "hbo": "Biblical Hebrew",
-    "gkm": "Byzantine Greek",
-    "gmq": "North Germanic languages",
-    "pa": "Punjabi",
-    "cel-gau": "Gaulish",
-    "ug": "Uyghur",
-    "la-ecc": "Ecclesiastical Latin",
-    "sla": "Slavic languages",
-    "nci": "Classical Nahuatl",
-    "mul-tax": "Taxonomic name",
-    "fro-nor": "Old Northern French",
-    "kw": "Cornish",
-    "pal": "Middle Persian",
-    "km": "Khmer",
-    "te": "Telugu",
-    "cel-bry-pro": "Proto-Brythonic",
-    "odt": "Old Dutch",
-    "dz": "Dzongkha",
-    "hop": "Hopi",
-    "yo": "Yoruba",
-    "scn": "Sicilian",
-    "gu": "Gujarati",
-    "ltc": "Middle Chinese",
-    "ceb": "Cebuano",
-    "ne": "Nepali",
-    "osx": "Old Saxon",
-    "gsw": "Alemannic German",
-    "am": "Amharic",
-    "zh-postal": "Postal Romanization",
-    "cmn-tongyong": "Tongyong Pinyin",
-    "qu": "Quechua",
-    "tpw": "Old Tupi",
-    "oj": "Ojibwe",
-    "fa-ira": "Iranian Persian",
-    "si": "Sinhalese",
-    "qsb-grc": "Pre-Greek",
-    "xcb": "Cumbric",
-    "trk": "Turkic languages",
-    "sux": "Sumerian",
-    "nan-tws": "Teochew",
-    "tnq": "Taino",
-    "xpi": "Picard",
-    "mk": "Macedonian",
-    "nah": "Nahuatl languages",
-    "kk": "Kazakh",
-    "es-MX": "Mexican Spanish",
-    "cel-bry": "Brythonic languages",
-    "mga": "Middle Irish",
-    "alg": "Algonquian languages",
-    "kn": "Kannada",
-    "ett": "Etruscan",
-    "zu": "Zulu",
-    "phn": "Phoenician",
-    "rom": "Romani",
-    "jam": "Jamaican Patois",
-    "enm-nor": "Northern Middle English",
-    "ig": "Igbo",
-    "jv": "Javanese",
-    "iu": "Inuktitut",
-    "fy": "West Frisian",
-    "trk-pro": "Proto-Turkic",
-    "azc-nah": "Nahuan languages",
-    "osp": "Old Spanish",
-    "cr": "Cree",
-    "roa-oit": "Old Italian",
-    "dsb": "Lower Sorbian",
-    "ha": "Hausa",
-    "yxg": "Yagara",
-    "gmw-msc": "Middle Scots",
-    "sem": "Semitic languages",
-    "vec": "Venetian",
-    "ibl": "Ibaloi",
-    "so": "Somali",
-    "as": "Assamese",
-    "xdk": "Dharug",
-    "syc": "Classical Syriac",
 }
 
-
 def language_name(code: str | None) -> str | None:
+    """
+    Returns the human-readable name for a Wiktionary language code.
+    
+    If the code is unknown, returns the code itself (loss-tolerant behavior).
+    """
     if not code:
-        return None
-    code = code.strip()
-    if not code or code == "-":
         return None
     return LANGUAGE_CODE_TO_NAME.get(code, code)
