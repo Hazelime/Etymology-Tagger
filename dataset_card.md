@@ -37,10 +37,6 @@ dataset_info:
   splits:
   - name: train
     num_examples: 83204
-    gen_kwargs:
-      data_files:
-      - split: train
-        path: etymology_records.jsonl
 configs:
 - config_name: default
   data_files:
