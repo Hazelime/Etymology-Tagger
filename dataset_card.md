@@ -5,19 +5,19 @@ language:
 task_categories:
 - token-classification
 - text-classification
-pretty_name: English Etymology Tagger Prototype Dataset
+pretty_name: English Etymology Tagger Dataset
 ---
 
-# English Etymology Tagger Prototype Dataset
+# English Etymology Tagger Dataset
 
-This is a compact prototype dataset derived from English entries in Wiktionary, using machine-readable JSONL from [Kaikki](https://kaikki.org/).
+A refined dataset of English word etymologies derived from Wiktionary entries via machine-readable JSONL from [Kaikki](https://kaikki.org/).
 
 ## Dataset Statistics
 
 ### 1. Data Pipeline & Volume
 - **Original Source**: 1,465,676 English entries (total lines in the Kaikki English JSONL).
 - **Relevant Datapoints**: 102,111 entries (words containing etymological templates parsed by `wiktextract`).
-- **Filtered & Processed**: 83,204 datapoints were used for model training and evaluation (after collapsing variants and ensuring at least one valid label remained).
+- **Filtered & Processed**: 83,204 datapoints used for training and evaluation.
 
 ### 2. Source Language Distribution (Top 10)
 Based on the relevant datapoints ($N = 102,111$):
@@ -47,21 +47,16 @@ Based on the relevant datapoints ($N = 102,111$):
 | **inherited** | 18,032 | 17.66% |
 | **calqued** | 2,231 | 2.18% |
 
-*(Note: Percentages sum to >100% because words can have multiple etymological paths/labels. The "Other" category is significant because it aggregates hundreds of rare languages including Ukrainian, Welsh, and Portuguese.)*
+*(Note: Percentages sum to >100% because words can have multiple labels. The "Other" category aggregates hundreds of minority languages.)*
 
 ### Data Processing & Refinement
-1.  **Linguistic Consolidation (Collapsing)**: Numerous Wiktionary language variants were mapped to their primary families to reduce sparsity.
-    *   **Latin variants** (Late, Medieval, Vulgar, etc.) → **Latin**.
-    *   **English variants** (Old, Middle, etc.) → **English**.
-    *   **Germanic Merges**: "Proto-West Germanic" was merged into **"Proto-Germanic"** to provide a more stable training signal.
-2.  **Label Thresholding**: Only languages appearing in **>1%** of the dataset (~1,021 occurrences) are preserved as distinct labels. All others are remapped to **"Other"**.
-3.  **Exclusions**: Non-etymological labels such as **"Translingual"** and broad categories like **"Germanic languages"** were removed.
-4.  **Imbalance Mitigation**:
-    *   **Undersampling**: The training set implements a random **50% undersampling** for words originating from **Latin**, **English**, and **French**.
-    *   **Multi-Task Optimization**: The dataset is designed for Multi-Task Learning (MTL), allowing models to learn shared representations for both source languages and entry mechanisms.
+1.  **Linguistic Consolidation**: Common language variants are mapped to primary families (e.g., Old/Middle English variants merge into `English`).
+2.  **Label Thresholding**: Languages appearing in **>1%** of the dataset are preserved as distinct labels; others are remapped to **"Other"**.
+3.  **Exclusions**: Non-etymological labels (e.g., **"Translingual"**) are removed.
+4.  **Imbalance Mitigation**: High-frequency classes (Latin, English, French) are randomly undersampled by 50% in the training set.
 
 ## Source
 The source is English Wiktionary data extracted by Wiktextract and published by [Kaikki](https://kaikki.org/).
 
 ## Limitations
-Etymology is often ambiguous or layered. A word might have an inherited root but be heavily influenced by a subsequent borrowing (e.g., "skirt" vs. "shirt"). This dataset represents the primary paths captured in Wiktionary templates.
+Etymology represents the primary paths captured in Wiktionary templates and may not reflect every historical nuance for complex terms.
