@@ -92,27 +92,33 @@ CSS = """
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  color: #374151;
-  background: #ffffff;
+  color: #ffffff;
+  background: #111827;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 .eval-table th {
-  background: #f9fafb;
+  background: #1f2937;
   font-weight: 600;
   text-align: left;
   padding: 10px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #374151;
+  color: #ffffff;
 }
 .eval-table td {
   padding: 10px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #1f2937;
+  color: #f3f4f6;
+}
+.eval-table tr:last-child td {
+  border-bottom: none;
 }
 .eval-title {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 12px;
+  color: var(--body-text-color, #111827);
 }
 """
 
