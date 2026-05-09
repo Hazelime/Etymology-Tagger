@@ -1,0 +1,27 @@
+Before you proceed, please read the full task description below and ask for clarifications if needed.
+
+Task
+Create a word etymology tagger for English that tags words across two etymological dimensions:
+1) Source language, for example French, (Old/Middle) English, Dutch, or Arabic.
+2) Source mechanism, for example borrowed directly from another language (e.g. “sushi” from Japanese), derived from another language (e.g. “parabola” from Greek), calqued from another language (e.g. “skyscraper” from French), or inherited (e.g. “father” from Middle English).
+
+Data
+Build a suitable dataset based on etymological information on the English version of Wiktionary. Use the JSONL data on https://www.kaikki.org as your source. You can read more about the Wiktionary format here: https://en.wiktionary.org/wiki/Wiktionary:Etymology. Note that Wiktionary contains very much data that is irrelevant for this task, so please filter out (delete) any irrelevant data before you proceed with the rest of the task.
+
+Model Architecture
+At the bottom of the model is a fastText embedding that uses pre-trained English word vectors of your choice to transform the input data into a workable format for the rest of the model.
+
+Above the embedding layer are the two tagging heads. 
+
+Evaluation
+Split the data into a train set and a test set. Calculate precision, recall, and F-score on the test set for each of the two parts of the tagger.
+
+Notes
+Categories may overlap. For example, “alcohol” is borrowed from French but ultimately derived from Arabic. Therefore, “alcohol” should be tagged both as borrowed from French and as derived from Arabic.
+
+Classes in the data will likely be very unbalanced, since there are many more English words borrowed from for example French than, say, Polynesian. Account for this when training the model.
+
+Presentation
+Upload the project to my HuggingFace and my GitHub (ask for links and credentials when the time comes). The dataset should be uploaded separately to HuggingFace.
+
+Create a working demo as a HuggingFace space where users can input a text they want tagged. The demo should then color-code each word by the most probable source language and make it clickable. When a word is clicked, a full etymological breakdown should be displayed.

@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.deps/
+.tmp/
+dist/
+models/*.zip
+models/*.gz
+data/raw/
+downloads/

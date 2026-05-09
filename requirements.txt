@@ -1,0 +1,4 @@
+numpy>=1.26
+gradio>=4.44
+huggingface_hub>=0.23
+torch>=2.0.0
