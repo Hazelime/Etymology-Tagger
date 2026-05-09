@@ -2,13 +2,16 @@
 
 A neural etymology tagger produced as a course assignment for **Information Retrieval (5LN712)** at Uppsala University.
 
+**Live Demo**: [Hugging Face Spaces](https://huggingface.co/spaces/MarcusBennevall/EtymologyTagger)  
+**Dataset**: [Hugging Face Datasets](https://huggingface.co/datasets/MarcusBennevall/EtymologyTaggerDataset)
+
 This system provides automated etymological analysis for English words, utilizing Wiktionary-derived data from [Kaikki](https://kaikki.org/), pretrained fastText word vectors, and high-dimensional orthographic features.
 
 ## Architecture: Y-Shape Multi-Task Learning (MTL)
 
 The tagger uses a **Y-Shape Multi-Task Learning (MTL) Neural Network** architecture designed to jointly model the overlapping dimensions of etymological origin:
 
-1.  **Shared Trunk**: A deep MLP (512 -> 256 neurons) with ReLU activation and Dropout (0.4) that extracts a unified representation from semantic and orthographic features.
+1.  **Shared Trunk**: A deep **Multi-Layer Perceptron (MLP)** (512 -> 256 neurons) with ReLU activation and Dropout (0.4) that extracts a unified representation from semantic and orthographic features.
 2.  **Source Language Head**: A task-specific head predicting the most likely linguistic origins (e.g., `Latin`, `Proto-Germanic`).
 3.  **Entry Mechanism Head**: A task-specific head predicting the primary etymological process (e.g., `borrowed`, `derived`, `inherited`).
 
@@ -41,7 +44,7 @@ $PY="python" # Or path to your Python executable
 ```
 
 ### 2. Running the Demo
-The system includes an interactive Gradio demo (`app.py`).
+The system includes an interactive Gradio demo (`app.py`), which is also hosted on [Hugging Face Spaces](https://huggingface.co/spaces/MarcusBennevall/EtymologyTagger).
 
 ```powershell
 pip install -r requirements.txt
@@ -57,3 +60,4 @@ The dataset builder streams Kaikki data and writes only compact etymology record
 - `models/fasttext_subset.vec`: 300d pretrained vector subset.
 - `models/etymology_tagger.pt`: Trained PyTorch MTL model.
 - `models/metadata.json`: Thresholds, labels, and evaluation metrics.
+- `Report.pdf`: Final project report and analysis.
